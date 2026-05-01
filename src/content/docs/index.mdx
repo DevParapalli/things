@@ -1,0 +1,21 @@
+---
+title: things.parapalli.dev
+description: Cheatsheets, snippets, templates, and refs. Open, find the thing, close.
+template: splash
+hero:
+  tagline: random shit I made up
+  actions:
+    - text: Browse by tags
+      link: /tags/
+      icon: right-arrow
+---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+  <LinkCard title="Formats" href="/formats/" description="quite literally templates, either for here or for wherever else" />
+  <LinkCard title="Refs" href="/refs/" description="stuff i usually search and hate looking through search engines for" />
+  <LinkCard title="Snippets" href="/snippets/" description="patterns i use pretty often" />
+  <LinkCard title="Techniques" href="/techniques/" description="quick guide on mental models and thinking frameworks" />
+  <LinkCard title="Tools" href="/tools/" description="quick-look command references, i hav goldfish memory" />
+</CardGrid>

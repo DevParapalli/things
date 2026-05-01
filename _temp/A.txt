@@ -1,0 +1,542 @@
+bash
+mkdir -p /home/claude/things/src/content/docs/{techniques,tools,formats,refs,snippets}
+
+# Index files
+cat > /home/claude/things/src/content/docs/techniques/index.md << 'EOF'
+---
+title: Techniques
+description: Mental models, thinking frameworks, and heuristics.
+---
+
+How to think about problems. Not tutorials — opinionated approaches that work.
+EOF
+
+cat > /home/claude/things/src/content/docs/tools/index.md << 'EOF'
+---
+title: Tools
+description: Cheatsheets for tools used daily.
+---
+
+Command reference. No prose. Open, copy, close.
+EOF
+
+cat > /home/claude/things/src/content/docs/formats/index.md << 'EOF'
+---
+title: Formats
+description: Templates, schemas, and structured starting points.
+---
+
+ADRs, commit messages, PR templates, config skeletons. Copy and fill.
+EOF
+
+cat > /home/claude/things/src/content/docs/refs/index.md << 'EOF'
+---
+title: Refs
+description: Pure lookup tables. No explanation.
+---
+
+Open fast, find the thing, close.
+EOF
+
+cat > /home/claude/things/src/content/docs/snippets/index.md << 'EOF'
+---
+title: Snippets
+description: Code patterns by language and framework.
+---
+
+Naming: `language-framework.md` or `language-framework-library.md`.  
+Examples: `python-fastapi.md`, `python-fastapi-sqlalchemy.md`, `python-typer.md`.
+EOF
+
+# Techniques samples
+cat > /home/claude/things/src/content/docs/techniques/agent-design.md << 'EOF'
+---
+title: Agent Design
+description: ReAct vs Plan-Execute, tool design rules, when to use each.
+tags: [ai, agents, llm]
+---
+
+## ReAct vs Plan-Execute
+
+| | ReAct | Plan-Execute |
+|---|---|---|
+| Pattern | Think → Act → Observe loop | Plan all steps upfront → execute |
+| Best for | Exploratory, dynamic tasks | Predictable, structured workflows |
+| Weakness | Can loop, hard to bound | Brittle if plan assumptions break |
+| Cost | Higher — more LLM calls | Lower — one planning call |
+
+## Tool Design Rules
+
+- One tool, one responsibility
+- Tool names are instructions — name them as verbs: `search_docs` not `docs`
+- Always return structured output — LLM parses it next
+- Fail loudly — return error strings, not silent nulls
+
+## When to Use Each
+
+**ReAct** — open-ended research, debugging loops, anything where next step depends on previous result.
+
+**Plan-Execute** — form processing, pipelines with known shape, anything you'd write as a flowchart first.
+EOF
+
+cat > /home/claude/things/src/content/docs/techniques/llm-selection.md << 'EOF'
+---
+title: LLM Selection
+description: Model tier guide — cost vs capability tradeoffs.
+tags: [ai, llm]
+---
+
+## Tier Guide
+
+| Tier | Models | Use when |
+|------|--------|----------|
+| Frontier | Claude Opus, GPT-4o | Complex reasoning, ambiguous tasks, one-shot quality matters |
+| Mid | Claude Sonnet, GPT-4o-mini | Agentic loops, high volume, structured output |
+| Small | Claude Haiku, Gemini Flash | Classification, routing, simple extraction |
+| Local | Ollama/Llama3, Mistral | Privacy, offline, low-latency tools |
+
+## Decision Axes
+
+**Cost** — frontier ~10-60x more expensive than small. Use small for routing, frontier for final output.
+
+**Context** — long context (>32k) narrows options fast. Check limits before committing.
+
+**Speed** — agentic loops feel slow at frontier. Mid tier is the sweet spot.
+
+**Structured output** — all tiers can do JSON mode now. Small models still drift on complex schemas.
+
+## Heuristics
+
+- Default to mid tier. Upgrade only when output quality is provably insufficient.
+- Never use frontier for classification or routing.
+- Local models for anything touching sensitive data.
+EOF
+
+# Tools samples
+cat > /home/claude/things/src/content/docs/tools/git.md << 'EOF'
+---
+title: Git
+description: Daily git commands and flags.
+tags: [git, vcs]
+---
+
+## Daily
+
+```bash
+git status
+git add -p                          # interactive hunk staging
+git commit -m "type(scope): msg"
+git push -u origin HEAD             # push + set upstream in one
+git pull --rebase                   # rebase instead of merge commit
+```
+
+## Log
+
+```bash
+git log --oneline --graph --all     # visual branch tree
+git log --follow -p -- file.txt     # full history of a file
+git log --author="Dev" --since="1 week ago"
+```
+
+## Branches
+
+```bash
+git switch -c feature/name          # create + switch
+git switch -                        # back to previous branch
+git branch -d feature/name          # delete merged
+git branch -D feature/name          # force delete
+```
+
+## Undo
+
+```bash
+git restore file.txt                # discard working tree changes
+git restore --staged file.txt       # unstage
+git commit --amend --no-edit        # add to last commit
+git reset --soft HEAD~1             # undo commit, keep staged
+git reset --hard HEAD~1             # undo commit, discard changes
+```
+
+## Stash
+
+```bash
+git stash push -m "description"
+git stash list
+git stash pop                       # apply latest + drop
+git stash apply stash@{2}           # apply specific, keep in list
+```
+
+## Remote
+
+```bash
+git remote -v
+git fetch --prune                   # fetch + remove dead remote branches
+git push --force-with-lease         # safer force push
+```
+EOF
+
+cat > /home/claude/things/src/content/docs/tools/docker.md << 'EOF'
+---
+title: Docker
+description: Build, run, debug, and clean Docker one-liners.
+tags: [docker, containers]
+---
+
+## Build
+
+```bash
+docker build -t name:tag .
+docker build -t name:tag -f Dockerfile.prod .
+docker build --no-cache -t name:tag .
+```
+
+## Run
+
+```bash
+docker run -it name:tag                         # interactive
+docker run -d -p 8080:80 --name app name:tag    # detached, port map
+docker run --rm -it name:tag sh                 # ephemeral shell
+docker run -v $(pwd):/app name:tag              # mount cwd
+```
+
+## Inspect
+
+```bash
+docker ps                           # running containers
+docker ps -a                        # all containers
+docker logs -f container_name       # follow logs
+docker exec -it container_name sh   # shell into running container
+docker inspect container_name       # full JSON metadata
+```
+
+## Cleanup
+
+```bash
+docker rm $(docker ps -aq)          # remove all stopped containers
+docker rmi $(docker images -q)      # remove all images
+docker system prune -af             # nuclear — removes everything unused
+docker volume prune                 # remove unused volumes
+```
+
+## Compose
+
+```bash
+docker compose up -d
+docker compose down
+docker compose down -v              # also remove volumes
+docker compose logs -f service
+docker compose exec service sh
+docker compose build --no-cache
+```
+EOF
+
+# Formats samples
+cat > /home/claude/things/src/content/docs/formats/conventional-commits.md << 'EOF'
+---
+title: Conventional Commits
+description: Commit message format with examples.
+tags: [git, commits]
+---
+
+## Format
+
+```
+type(scope): short description
+
+[optional body]
+
+[optional footer]
+```
+
+## Types
+
+| Type | When |
+|------|------|
+| `feat` | new feature |
+| `fix` | bug fix |
+| `chore` | tooling, deps, config — no prod code change |
+| `docs` | documentation only |
+| `refactor` | restructure without behavior change |
+| `perf` | performance improvement |
+| `test` | adding or fixing tests |
+| `ci` | CI/CD pipeline changes |
+| `revert` | reverting a previous commit |
+
+## Rules
+
+- Subject line ≤ 72 chars
+- Imperative mood — "add feature" not "added feature"
+- No period at end of subject
+- Scope is optional but useful in monorepos
+- Breaking change: add `!` after type — `feat!: new auth flow`
+
+## Examples
+
+```
+feat(auth): add JWT refresh token rotation
+
+fix(api): handle null response from upstream service
+
+chore: upgrade pnpm to 9.1.0
+
+refactor(agent): extract tool execution into separate module
+
+feat!: replace session auth with OAuth2
+
+BREAKING CHANGE: session cookies no longer valid, users must re-authenticate
+```
+EOF
+
+cat > /home/claude/things/src/content/docs/formats/adr.md << 'EOF'
+---
+title: Architecture Decision Record
+description: ADR template and example.
+tags: [architecture, docs]
+---
+
+## Template
+
+```md
+# ADR-XXX: [Title]
+
+**Date:** YYYY-MM-DD  
+**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-XXX
+
+## Decision
+
+One sentence. What was decided.
+
+## Context
+
+Why this decision was needed. What problem it solves.
+
+## Alternatives Rejected
+
+- **Option A** — why rejected
+- **Option B** — why rejected
+
+## Tradeoffs Accepted
+
+What you're giving up by making this choice.
+
+## Consequences
+
+What changes as a result. What becomes easier. What becomes harder.
+```
+
+## Numbering
+
+Pad to three digits: `ADR-001`, `ADR-002`. Never reuse a number. Superseded ADRs stay in the repo.
+
+## Status Flow
+
+`Proposed` → `Accepted` → `Deprecated` or `Superseded by ADR-XXX`
+EOF
+
+cat > /home/claude/things/src/content/docs/formats/pr-template.md << 'EOF'
+---
+title: PR Template
+description: Pull request body structure.
+tags: [git, review]
+---
+
+## Template
+
+```md
+## What
+
+Short description of what changed and why.
+
+## How
+
+Key implementation decisions. What to focus on during review.
+
+## Testing
+
+How this was tested. What cases are covered.
+
+## Checklist
+
+- [ ] Tests added/updated
+- [ ] Docs updated if needed
+- [ ] No dead code
+- [ ] ENV vars documented in `.env.example`
+
+## Related
+
+Closes #issue_number
+```
+
+## Notes
+
+- **What** — one paragraph max. If you can't summarize it, the PR is too large.
+- **How** — point reviewers at the interesting parts, not a line-by-line walkthrough.
+- Skip sections that don't apply. Don't leave empty headers.
+EOF
+
+# Refs samples
+cat > /home/claude/things/src/content/docs/refs/http-status.md << 'EOF'
+---
+title: HTTP Status Codes
+description: Status code lookup table.
+tags: [http, api]
+---
+
+## 2xx Success
+
+| Code | Name | Use when |
+|------|------|----------|
+| 200 | OK | Standard success |
+| 201 | Created | POST created a resource |
+| 202 | Accepted | Async — request accepted, processing later |
+| 204 | No Content | Success, no body — DELETE, some PUTs |
+
+## 3xx Redirect
+
+| Code | Name | Use when |
+|------|------|----------|
+| 301 | Moved Permanently | Permanent URL change |
+| 302 | Found | Temporary redirect |
+| 304 | Not Modified | Cached response still valid |
+
+## 4xx Client Error
+
+| Code | Name | Use when |
+|------|------|----------|
+| 400 | Bad Request | Malformed input |
+| 401 | Unauthorized | Not authenticated |
+| 403 | Forbidden | Authenticated, no permission |
+| 404 | Not Found | Resource missing |
+| 405 | Method Not Allowed | Wrong HTTP verb |
+| 409 | Conflict | Duplicate or state conflict |
+| 410 | Gone | Resource permanently deleted |
+| 422 | Unprocessable Entity | Validation failed |
+| 429 | Too Many Requests | Rate limited |
+
+## 5xx Server Error
+
+| Code | Name | Use when |
+|------|------|----------|
+| 500 | Internal Server Error | Unhandled exception |
+| 501 | Not Implemented | Endpoint exists, not built yet |
+| 502 | Bad Gateway | Upstream service down |
+| 503 | Service Unavailable | Overloaded or maintenance |
+| 504 | Gateway Timeout | Upstream too slow |
+EOF
+
+cat > /home/claude/things/src/content/docs/refs/git-flags.md << 'EOF'
+---
+title: Git Flags
+description: Useful git flag reference.
+tags: [git]
+---
+
+## log
+
+| Flag | Effect |
+|------|--------|
+| `--oneline` | Compact one-line format |
+| `--graph` | ASCII branch graph |
+| `--all` | Include all branches/remotes |
+| `--follow` | Track file renames |
+| `-p` | Show patch diff |
+| `--stat` | Files changed summary |
+| `--author="name"` | Filter by author |
+| `--since="2 weeks ago"` | Time filter |
+| `--grep="pattern"` | Filter by commit message |
+
+## diff
+
+| Flag | Effect |
+|------|--------|
+| `--staged` | Diff staged vs last commit |
+| `--stat` | Summary only |
+| `--word-diff` | Inline word-level diff |
+| `--name-only` | Only file names |
+
+## push / fetch
+
+| Flag | Effect |
+|------|--------|
+| `--force-with-lease` | Force push only if no new remote commits |
+| `--prune` | Remove remote-tracking refs for deleted branches |
+| `-u` | Set upstream tracking |
+| `--tags` | Push tags too |
+EOF
+
+# Snippets sample
+cat > /home/claude/things/src/content/docs/snippets/python-fastapi.md << 'EOF'
+---
+title: Python — FastAPI
+description: FastAPI patterns and boilerplate.
+tags: [python, fastapi]
+---
+
+## App skeleton
+
+```python
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
+    yield
+    # shutdown
+
+app = FastAPI(lifespan=lifespan)
+```
+
+## Router
+
+```python
+from fastapi import APIRouter, Depends, HTTPException, status
+
+router = APIRouter(prefix="/items", tags=["items"])
+
+@router.get("/{item_id}")
+async def get_item(item_id: int):
+    ...
+
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_item():
+    ...
+```
+
+## Dependency injection
+
+```python
+from fastapi import Depends
+from typing import Annotated
+
+async def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+DB = Annotated[Session, Depends(get_db)]
+
+@router.get("/")
+async def route(db: DB):
+    ...
+```
+
+## Error handling
+
+```python
+from fastapi import HTTPException, status
+
+raise HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Item not found"
+)
+```
+EOF
+
+echo "Done. File tree:"
+find /home/claude/things -type f | sort
+
+Output
+Done. File tree:

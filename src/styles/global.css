@@ -1,0 +1,11 @@
+/* src/styles/global.css */
+@import 'tailwindcss';
+@import 'starlight-theme-nova/tailwind.css';
+
+/* Self-hosted fonts — add @font-face blocks here once you decide */
+
+/* CSS var overrides */
+:root {
+  /* --sl-font: 'Syne', sans-serif; */
+  /* --sl-font-mono: 'DM Mono', monospace; */
+}

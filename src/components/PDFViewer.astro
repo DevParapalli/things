@@ -1,0 +1,6 @@
+<!-- src/components/PDFViewer.astro -->
+---
+const { src, height = "800px" } = Astro.props;
+const viewerUrl = `/pdfjs/web/viewer.html?file=${encodeURIComponent(src)}`;
+---
+<iframe src={viewerUrl} width="100%" height={height} style="border:none;border-radius:8px;" />
