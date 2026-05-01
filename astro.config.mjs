@@ -30,6 +30,7 @@ export default defineConfig({
 				starlightScrollToTop(),
 				starlightLinksValidator({
 					errorOnRelativeLinks: false,
+					exclude: ['/tags/']
 				}),
 				starlightLlmsTxt(),
 				starlightSidebarTopics([
