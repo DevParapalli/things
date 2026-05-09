@@ -25,15 +25,23 @@ export default defineConfig({
 				starlightImageZoom(),
 				starlightHeadingBadges(),
 				starlightGithubAlerts(),
-				starlightTags({ onInlineTagsNotFound: 'create' }),
+				starlightTags({ onInlineTagsNotFound: 'create', sidebar: {
+					enabled: false
+				}, tagsPagesPrefix: 'tags', tagsIndexSlug: 'tags'}),
 				starlightCodeblockFullscreen(),
 				starlightScrollToTop(),
 				starlightLinksValidator({
-					errorOnRelativeLinks: false,
+					errorOnRelativeLinks: true,
 					exclude: ['/tags/']
 				}),
 				starlightLlmsTxt(),
 				starlightSidebarTopics([
+										{
+						label: 'Blog',
+						link: '/blog/',
+						icon: 'seti:notebook',
+						items: [{ label: 'formats', autogenerate: { directory: 'formats' } }],
+					},
 					{
 						label: 'Formats',
 						link: '/formats/',
@@ -71,6 +79,7 @@ export default defineConfig({
 				}),
 				starlightThemeNova({
 					nav: [
+						{ label: 'WebLog', href: '/blog/' },
 						{ label: 'Formats', href: '/formats/' },
 						{ label: 'Refs', href: '/refs/' },
 						{ label: 'Snippets', href: '/snippets/' },
@@ -82,13 +91,11 @@ export default defineConfig({
 			customCss: ['./src/styles/global.css'],
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/DevParapalli' }
-			]
-			//   sidebar: [
-			//     { label: 'Techniques', autogenerate: { directory: 'techniques' } },
-			//     { label: 'Tools', autogenerate: { directory: 'tools' } },
-			//     { label: 'Templates', autogenerate: { directory: 'templates' } },
-			//     { label: 'Refs', autogenerate: { directory: 'refs' } },
-			//   ],
+			],
+			// components: {
+			// 	Sidebar: './src/components/overrides/Sidebar.astro'
+			// }
+			routeMiddleware: ['./src/middleware/tags-splash.ts']
 		}),
 	],
 })
