@@ -1,5 +1,5 @@
 ---
-title: "001-docker-python"
+title: "Python + Docker Best Practices"
 tags: 
     - docker
     - python

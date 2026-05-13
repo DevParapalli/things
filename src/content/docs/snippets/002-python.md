@@ -1,5 +1,5 @@
 ---
-title: "002-python"
+title: "Python Notes"
 tags: 
     - python
     - snippet
