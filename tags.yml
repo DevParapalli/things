@@ -1,15 +1,25 @@
 tags:
+  # section tags
+  log:
+    label: Log
+  note:
+    label: Note
+  refs:
+    label: Reference
+  study:
+    label: Case Study
+  # topic tags
   guidelines:
     label: Guidelines
   best-practices:
     label: Best Practices
-  blog:
-    label: Blog Post
-  format:
-    label: Format
-  snippet:
-    label: Snippet
-  techniques:
-    label: Techniques
-  tool:
-    label: Tool
+  naming:
+    label: Naming
+  hostnames:
+    label: Hostnames
+  software:
+    label: Software
+  docker:
+    label: Docker
+  python:
+    label: Python

@@ -36,17 +36,17 @@ export default defineConfig({
 				}),
 				starlightLlmsTxt(),
 				starlightSidebarTopics([
-										{
-						label: 'Blog',
-						link: '/blog/',
+					{
+						label: 'Log',
+						link: '/log/',
 						icon: 'seti:notebook',
-						items: [{ label: 'formats', autogenerate: { directory: 'formats' } }],
+						items: [{ label: 'log', autogenerate: { directory: 'log' } }],
 					},
 					{
-						label: 'Formats',
-						link: '/formats/',
-						icon: 'document',
-						items: [{ label: 'formats', autogenerate: { directory: 'formats' } }],
+						label: 'Notes',
+						link: '/notes/',
+						icon: 'open-book',
+						items: [{ label: 'notes', autogenerate: { directory: 'notes' } }],
 					},
 					{
 						label: 'Refs',
@@ -55,36 +55,21 @@ export default defineConfig({
 						items: [{ label: 'refs', autogenerate: { directory: 'refs' } }],
 					},
 					{
-						label: 'Snippets',
-						link: '/snippets/',
-						icon: 'open-book',
-						items: [{ label: 'tools', autogenerate: { directory: 'snippets' } }],
+						label: 'Studies',
+						link: '/studies/',
+						icon: 'document',
+						items: [{ label: 'studies', autogenerate: { directory: 'studies' } }],
 					},
-					{
-						label: 'Techniques',
-						link: '/techniques/',
-						icon: 'rocket',
-						items: [{ label: 'techniques', autogenerate: { directory: 'techniques' } }],
-					},
-					{
-						label: 'Tools',
-						link: '/tools/',
-						icon: 'setting',
-						items: [{ label: 'tools', autogenerate: { directory: 'tools' } }],
-					},
-
 				], {
 
 					exclude: ['/tags', "/tags/**"]
 				}),
 				starlightThemeNova({
 					nav: [
-						{ label: 'WebLog', href: '/blog/' },
-						{ label: 'Formats', href: '/formats/' },
+						{ label: 'Log', href: '/log/' },
+						{ label: 'Notes', href: '/notes/' },
 						{ label: 'Refs', href: '/refs/' },
-						{ label: 'Snippets', href: '/snippets/' },
-						{ label: 'Techniques', href: '/techniques/' },
-						{ label: 'Tools', href: '/tools/' },
+						{ label: 'Studies', href: '/studies/' },
 					],
 				}),
 			],

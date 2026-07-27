@@ -2,7 +2,7 @@
 title: "Python Notes"
 tags: 
     - python
-    - snippet
+    - note
 ---
 
 good to use libs, for things I commonly do.

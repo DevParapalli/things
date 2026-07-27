@@ -4,7 +4,7 @@ tags:
   - docker
   - guidelines
   - best-practices
-  - snippet
+  - note
 ---
 
 base rules for using docker images in enterprise prod, in no particular order.

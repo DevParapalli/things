@@ -10,11 +10,18 @@ tags:
 
 ### Rules
 
-| Layer             | Theme                     | Example              |
-| ----------------- | ------------------------- | -------------------- |
-| Physical machines | Solar system planets      | `mars`               |
-| VMs / Containers  | Moons of parent planet    | `phobos` (on `mars`) |
-| Cloud instances   | Atmospheric / Noble gases | `argon`, `argonite`  |
+The split is by what you own, not by where the thing runs. Hardware you can
+touch gets the solar system, and the hierarchy is real - a VM's name tells you
+which box it is on. Rented compute gets chemistry, because it is fungible and
+the suffix can carry the role instead. Software you write gets exoplanets, in
+[004-software-names](/refs/004-software-names).
+
+| Relationship | Layer             | Theme                     | Example              |
+| ------------ | ----------------- | ------------------------- | -------------------- |
+| Own          | Physical machines | Solar system planets      | `mars`               |
+| Own          | VMs / Containers  | Moons of parent planet    | `phobos` (on `mars`) |
+| Rent         | Cloud instances   | Atmospheric / Noble gases | `argon`, `argonite`  |
+| Make         | Software          | Exoplanet proper names    | `poltergeist`        |
 
 ---
 
@@ -215,4 +222,13 @@ argonol          # monitoring node
 neonyl           # sidecar agent
 ```
 
-Turns out, your services can named this way too. It is fun calling out "Oh shit, hydrogen is down, requests cannot get to callisto."
+### Where software fits
+
+Software you write gets an exoplanet name - see
+[004-software-names](/refs/004-software-names). The two schemes do not overlap:
+the exoplanet name is the thing in the repo, and the gas name is a place it is
+running. That keeps a sentence like "poltergeist is down on argonite-2, so
+requests cannot get to callisto" readable with exactly one meaning.
+
+Third-party services keep their real names (`postgres`, `caddy`, `forgejo`).
+Only things you actually build get named.
