@@ -19,12 +19,28 @@ base rules for using docker images in enterprise prod, in no particular order.
 5. Copy `cargo.toml`, `package.json`, `pnpm-lock.yaml`, `pyproject.toml` etc. files, install deps before copying application code.
 6. Use GPG, sha256sum, cksum, etc. tools as needed to ensure file is downloaded correctly.
 7. Use ADD + sha-hash for online files, however remember that this will add a new layer with the file, and that takes up space. Not okay for final stage build.
-8. Use `BUILDKIT` and health-checks. Make sure your project contains a health-check that covers all external dependencies, including connecting to the database, checking if all the required hosts are accessible and we can perform all the functions we need to. Just checking if the application is online is not a valid health-check.
+8. Use `BUILDKIT` and health-checks. Make sure your project contains a health-check that covers all external dependencies, including connecting to the database, checking if all the required hosts are accessible and we can perform all the functions we need to. Just checking if the application is online is not a valid health-check. Kubernetes and OpenShift ignore the Dockerfile `HEALTHCHECK`, they use probes. Write the check once, wire it into both.
 9. Do not use filesystem for logging, use `stdout` and `stderr` for their intended purpose. Use the orchestration platform (such as Kubernetes, OpenShift etc.) or work with the logs on the host system. `docker run --log-driver local --log-opt max-size=10m --log-opt max-file=3 myapp`
-10. Support arbitrary UIDs when running, as some platforms (esp. OpenShift) will assign a random UID at runtime. Always use non-root users. Allow read permissions to the root group `(g=0)`. `chgrp -R 0 /app` & `chmod -R g=u /app`. Simulate with `docker run --user 123456 myapp`
-11. Use build-args and secrets. `ARG` for non-sensitive build values like version or env-name. Use `--mount=type=secret=<name>` for a step, secret is available at `/run/secrets/<name>`. Pass into image as `docker build --secret id=<name>,src=/host/file/secret` or replace `src=*` with `env=ENV_VAR` for values in current environment, pretty useful for login credentials for Artifactory or custom indexes.
+10. Support arbitrary UIDs when running, as some platforms (esp. OpenShift) will assign a random UID at runtime. Always use non-root users. Allow read permissions to the root group `(g=0)`. `chgrp -R 0 /app` & `chmod -R g=u /app`. Simulate with `docker run --user 123456 myapp`. `USER` must be a numeric UID, not a name. `runAsNonRoot` cannot resolve names and refuses the pod.
+11. Use build-args and secrets. `ARG` for non-sensitive build values like version or env-name. Use `--mount=type=secret=<name>` for a step, secret is available at `/run/secrets/<name>`. Pass into image as `docker build --secret id=<name>,src=/host/file/secret` or replace `src=*` with `env=ENV_VAR` for values in current environment, pretty useful for login credentials for Artifactory or custom indexes. Runtime secrets are not `ENV`. Visible in `docker inspect`, `/proc/1/environ` and every child process. Mount as files.
 12. Use OCI-standard labels. Read through <https://github.com/opencontainers/image-spec/blob/main/annotations.md> to understand the required labels. Quay has `quay.expire-after` to auto-delete the container image after a interval mentioned, use these things, they make life easier.
+13. Ship a `.dockerignore`. Deny everything, allow back what the build needs. Without it `.git`, `.env` and local venvs go into the context and bust the cache on every unrelated change.
+14. Pin base images by digest, not tag. `FROM python:3.13-slim@sha256:...`. Tags move under you. Renovate or Scout to bump them.
+15. Exec form for `ENTRYPOINT` and `CMD`. `ENTRYPOINT ["app"]`, not `ENTRYPOINT app`. Shell form makes `/bin/sh -c` PID 1 and it does not forward SIGTERM. Wrapper scripts end with `exec "$@"`. Distroless has no shell anyway.
+16. Cache mounts for package managers. `RUN --mount=type=cache,target=/root/.cache/uv ...`. Not the same as rule 5 - that is layer reuse, this is the package manager's own cache.
+17. SBOM and provenance in CI only. `docker buildx build --sbom=true --provenance=true`, sign with cosign. Attestations from a laptop assert nothing. `podman build` accepts `--sbom` and ignores it, `buildah build` works. For podman-built images use `syft <image> -o spdx-json`.
+18. Scan in CI. Fail on fixable HIGH/CRITICAL only, a gate that blocks on unfixable findings gets turned off in a week.
+    - `trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed <img>`
+    - `syft` for the SBOM, `grype sbom:<file>` to scan it. Works air-gapped.
+    - `hadolint` on the Dockerfile.
+    - `pip-audit` on the lockfile.
+    - Cache the vuln DB, `TRIVY_CACHE_DIR`, or you hit registry rate limits.
+    - Scan base and app layers separately. You cannot fix Debian's CVEs.
+    - Scan on a schedule too. New CVEs land against images you already shipped.
 
 Some links below, that might be useful.
 
-- 
+- <https://docs.docker.com/build/building/best-practices/>
+- <https://github.com/opencontainers/image-spec/blob/main/annotations.md>
+- <https://github.com/hadolint/hadolint>
+- <https://github.com/anchore/syft>
