@@ -1,0 +1,681 @@
+/* ============================================================
+   PROXIMA × STARLIGHT bridge
+   Maps Starlight's and starlight-theme-nova's surfaces onto the
+   Proxima tokens defined in proxima.css.
+
+   Loaded unlayered and after nova/tailwind.css, so these rules
+   beat @layer starlight.*, @layer nova and Tailwind utilities
+   without needing !important. Astro-scoped component styles are
+   also unlayered, so a handful of selectors below carry extra
+   specificity on purpose — those are marked.
+
+   Order follows PROXIMA.md §5: surfaces, text, accent, state,
+   shape, data views, atmosphere.
+   ============================================================ */
+
+/* -- 1 · Starlight tokens, dark ------------------------------ */
+:root,
+::backdrop {
+  /* neutrals: a tinted ramp, brightness carries hierarchy */
+  --sl-color-white: var(--ink-hi);
+  --sl-color-gray-1: #d5d8e8;
+  --sl-color-gray-2: var(--ink-mid);
+  --sl-color-gray-3: #7c819f;
+  --sl-color-gray-4: #565b79;
+  --sl-color-gray-5: #2b2f44;
+  --sl-color-gray-6: #1a1d2b;
+  --sl-color-gray-7: #12141f;
+  --sl-color-black: var(--void);
+
+  --sl-color-text: var(--ink-mid);
+  --sl-color-bg: var(--void);
+  --sl-color-bg-sidebar: transparent;
+  --sl-color-bg-nav: var(--glass-3);
+  --sl-color-bg-inline-code: var(--glass-2);
+  --sl-color-border-inline-code: var(--hairline-soft);
+
+  --sl-color-hairline: var(--hairline);
+  --sl-color-hairline-light: var(--hairline);
+  --sl-color-hairline-shade: var(--hairline-soft);
+  --sl-color-backdrop-overlay: rgba(6, 7, 14, 0.66);
+
+  /* one bright colour owns every active state */
+  --sl-color-accent-low: rgba(141, 141, 245, 0.14);
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: var(--accent);
+  --sl-color-text-accent: var(--accent);
+  --sl-color-text-invert: var(--accent-ink);
+  --sl-color-bg-accent: var(--accent);
+
+  /* state hues: -low is the fill, base is the line, -high is the text */
+  --sl-color-green-low: var(--mint-fill);
+  --sl-color-green: var(--mint-line);
+  --sl-color-green-high: var(--mint);
+  --sl-color-orange-low: var(--amber-fill);
+  --sl-color-orange: var(--amber-line);
+  --sl-color-orange-high: var(--amber);
+  --sl-color-red-low: var(--rose-fill);
+  --sl-color-red: var(--rose-line);
+  --sl-color-red-high: var(--rose);
+  --sl-color-blue-low: var(--sky-fill);
+  --sl-color-blue: var(--sky-line);
+  --sl-color-blue-high: var(--sky);
+  /* purple is the accent rather than a second saturated hue */
+  --sl-color-purple-low: rgba(141, 141, 245, 0.13);
+  --sl-color-purple: rgba(141, 141, 245, 0.3);
+  --sl-color-purple-high: var(--accent);
+
+  /* depth comes from blur, not shadow: only overlays keep one */
+  --sl-shadow-sm: none;
+  --sl-shadow-md: none;
+  --sl-shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.42);
+
+  /* nova */
+  --nano-color-highlight: rgba(141, 141, 245, 0.1);
+
+  /* type */
+  --sl-font: var(--font-ui);
+  --sl-font-mono: var(--font-mono);
+  --sl-text-body: 0.96875rem; /* 15.5px, Proxima's reading size */
+  --sl-line-height: 1.72;
+  --sl-line-height-headings: 1.2;
+  --sl-content-width: 46rem;
+}
+
+/* -- 2 · Starlight tokens, light ----------------------------- */
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+  --sl-color-white: var(--ink-hi);
+  --sl-color-gray-1: #2e3145;
+  --sl-color-gray-2: var(--ink-mid);
+  --sl-color-gray-3: #6c7191;
+  --sl-color-gray-4: var(--ink-low);
+  --sl-color-gray-5: #c6c9dc;
+  --sl-color-gray-6: #dee0ec;
+  --sl-color-gray-7: #f0f1f8;
+  --sl-color-black: var(--void);
+
+  --sl-color-bg-nav: rgba(255, 255, 255, 0.82);
+  --sl-color-backdrop-overlay: rgba(27, 29, 46, 0.5);
+
+  --sl-color-accent-low: rgba(87, 87, 217, 0.12);
+  --sl-color-purple-low: rgba(87, 87, 217, 0.12);
+  --sl-color-purple: rgba(87, 87, 217, 0.3);
+
+  --nano-color-highlight: rgba(87, 87, 217, 0.1);
+}
+
+/* -- 3 · base ------------------------------------------------ */
+:root {
+  background-color: var(--void);
+  color-scheme: dark;
+}
+:root[data-theme='light'] { color-scheme: light; }
+
+body {
+  background: transparent;
+  font-family: var(--font-ui);
+  font-weight: 380;
+  color: var(--ink-mid);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--accent-deep); color: var(--ink-hi); }
+:root[data-theme='light'] ::selection { color: #fff; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* tinted scrollbars, so the chrome does not go grey */
+* { scrollbar-color: var(--ink-low) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: var(--r-full); border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-low); background-clip: content-box; }
+
+/* -- 4 · atmosphere ------------------------------------------
+   Proxima's ink canvas and grain, done without markup: blooms on
+   a fixed pseudo-element behind the content, grain on one above.
+   Both are inert. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(58vw 54vh at 6% -8%, rgba(87, 87, 217, 0.5), transparent 62%),
+    radial-gradient(50vw 48vh at 98% 6%, rgba(141, 92, 240, 0.32), transparent 64%),
+    radial-gradient(46vw 40vh at 78% 58%, rgba(87, 87, 217, 0.16), transparent 66%),
+    radial-gradient(60vw 50vh at 30% 108%, rgba(141, 92, 240, 0.2), transparent 62%);
+}
+:root[data-theme='light'] body::before {
+  background-image:
+    radial-gradient(62vw 52vh at 8% -6%, rgba(87, 87, 217, 0.12), transparent 64%),
+    radial-gradient(54vw 46vh at 96% 14%, rgba(141, 92, 240, 0.08), transparent 66%),
+    radial-gradient(58vw 48vh at 68% 104%, rgba(87, 87, 217, 0.07), transparent 64%);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* the blend group costs more than it buys on a small screen or a pale one */
+@media (max-width: 55rem) { body::after { mix-blend-mode: normal; opacity: 0.035; } }
+:root[data-theme='light'] body::after { mix-blend-mode: normal; opacity: 0.025; }
+
+@media print {
+  body::before, body::after { display: none; }
+}
+
+/* -- 5 · header ---------------------------------------------- */
+body > div > header {
+  background: var(--glass-3);
+  -webkit-backdrop-filter: blur(26px) saturate(1.1);
+  backdrop-filter: blur(26px) saturate(1.1);
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+/* wordmark only, no lockup yet. The logotype is the serif, matching the
+   hero — a brand mark is furniture rather than the one flourish per screen. */
+header .site-title {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  color: var(--ink-hi);
+}
+
+/* top nav links use the ink ramp, not a colour */
+body > div > header nav a { color: var(--ink-low); transition: color 0.15s; }
+body > div > header nav a:hover { color: var(--ink-hi); }
+
+/* -- 6 · sidebar --------------------------------------------- */
+#starlight__sidebar {
+  background: var(--glass-1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-color: var(--hairline-soft);
+}
+@media (max-width: 50rem) {
+  /* off-canvas, so it needs to be opaque over the content it covers */
+  #starlight__sidebar { background: var(--glass-3); -webkit-backdrop-filter: blur(26px); backdrop-filter: blur(26px); }
+}
+
+/* topic switcher: capsules, brightness for state (specificity beats the
+   plugin's scoped styles) */
+.starlight-sidebar-topics li a {
+  border-radius: var(--r-full);
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-low);
+  padding: 0.4rem 0.6rem;
+  transition: color 0.15s, background 0.15s;
+}
+.starlight-sidebar-topics li a:hover { color: var(--ink-mid); background: var(--glass-1); }
+.starlight-sidebar-topics li a.starlight-sidebar-topics-current { color: var(--ink-hi); background: var(--glass-2); }
+.starlight-sidebar-topics li a .starlight-sidebar-topics-icon {
+  border-radius: var(--r-s);
+  border-color: var(--hairline);
+  color: var(--ink-low);
+}
+.starlight-sidebar-topics li a:is(.starlight-sidebar-topics-current, :hover, :focus-visible) .starlight-sidebar-topics-icon {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.starlight-sidebar-topics::after { border-color: var(--hairline-soft); }
+
+/* group labels become Proxima rail labels: mono, caps, quiet */
+.sidebar-content .group-label .large,
+.sidebar-content summary .group-label > span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-low);
+}
+
+/* page links */
+.sidebar-content ul a {
+  border-radius: var(--r-s);
+  font-size: 13.5px;
+  color: var(--ink-low);
+  transition: color 0.15s, background 0.15s;
+}
+.sidebar-content ul a:hover { color: var(--ink-mid); background: var(--glass-1); }
+.sidebar-content ul a[aria-current='page'],
+.sidebar-content ul a[aria-current='page']:hover {
+  color: var(--ink-hi);
+  background: var(--glass-2);
+  font-weight: 500;
+}
+
+/* -- 7 · table of contents ----------------------------------- */
+.right-sidebar { border-color: var(--hairline-soft); }
+.right-sidebar-panel h2,
+#starlight__on-this-page,
+#starlight__on-this-page--mobile {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-low);
+}
+/* .right-sidebar-panel :where(a) is (0,1,0), so these need a class of their own */
+.right-sidebar-panel starlight-toc nav a {
+  font-size: 13px;
+  color: var(--ink-low);
+  border-radius: var(--r-s);
+  transition: color 0.15s;
+}
+.right-sidebar-panel starlight-toc nav a:hover { color: var(--ink-mid); }
+.right-sidebar-panel starlight-toc nav a[aria-current='true'],
+.right-sidebar-panel starlight-toc nav a[aria-current='true']:hover { color: var(--ink-hi); font-weight: 500; }
+
+mobile-starlight-toc nav summary,
+mobile-starlight-toc .dropdown {
+  background: var(--glass-3);
+  -webkit-backdrop-filter: blur(26px);
+  backdrop-filter: blur(26px);
+  border-color: var(--hairline);
+}
+
+/* -- 8 · content: type --------------------------------------- */
+/* the bracketed eyebrow that opens every Proxima page */
+.page-eyebrow { margin-bottom: 10px; }
+.content-panel .sl-container > .page-eyebrow + h1 { margin-top: 0; }
+
+main h1,
+.content-panel h1 {
+  font-family: var(--font-ui);
+  font-size: clamp(28px, 3.6vw, 38px);
+  font-weight: 480;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  color: var(--ink-hi);
+  text-wrap: balance;
+}
+
+.sl-markdown-content { font-size: var(--sl-text-body); color: var(--ink-mid); }
+
+/* the lede: Proxima opens a piece of prose one step larger than the body */
+.sl-markdown-content > p:first-of-type { font-size: 17px; line-height: 1.62; color: var(--ink-mid); }
+
+.sl-markdown-content :is(h2, h3, h4, h5, h6) {
+  font-family: var(--font-ui);
+  color: var(--ink-hi);
+  letter-spacing: -0.012em;
+}
+.sl-markdown-content h2 { font-size: 24px; font-weight: 500; }
+.sl-markdown-content h3 { font-size: 18px; font-weight: 530; }
+.sl-markdown-content :is(h4, h5, h6) { font-size: 15.5px; font-weight: 540; }
+
+.sl-markdown-content strong { color: var(--ink-hi); font-weight: 540; }
+/* the serif flourish, exactly where Proxima puts it */
+.sl-markdown-content em:not(:where(.not-content *)) {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.06em;
+}
+
+.sl-markdown-content a:not(:where(.not-content *)) {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--accent-glow);
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.sl-markdown-content a:not(:where(.not-content *)):hover { text-decoration-color: var(--accent); }
+
+.sl-markdown-content li::marker { color: var(--ink-low); }
+.sl-markdown-content hr { border: 0; border-top: 1px solid var(--hairline-soft); }
+
+.sl-markdown-content blockquote:not(:where(.not-content *)) {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--ink-hi);
+  border-inline-start: 2px solid var(--accent-deep);
+  padding: 4px 0 4px 24px;
+}
+.sl-markdown-content blockquote :is(p, li) { font-size: inherit; color: inherit; }
+
+/* anchor links stay quiet until you are on the heading */
+.sl-anchor-link { color: var(--ink-low); }
+.sl-heading-wrapper:hover .sl-anchor-link { color: var(--accent); }
+
+/* -- 9 · content: tables (Proxima .dtable) ------------------- */
+.sl-markdown-content table:not(:where(.not-content *)) {
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.sl-markdown-content th:not(:where(.not-content *)) {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-low);
+  text-align: start;
+  border-bottom: 1px solid var(--hairline);
+  padding: 8px 12px;
+}
+.sl-markdown-content td:not(:where(.not-content *)) {
+  border-bottom: 1px solid var(--hairline-soft);
+  color: var(--ink-mid);
+  padding: 9px 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sl-markdown-content tbody tr:hover td:not(:where(.not-content *)) { background: var(--glass-1); }
+
+/* -- 10 · code ----------------------------------------------- */
+.sl-markdown-content code:not(:where(.not-content *)) {
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  color: var(--ink-hi);
+  background: var(--glass-2);
+  border-color: var(--hairline-soft);
+  border-radius: 6px;
+  padding: 1.5px 6px;
+}
+
+[data-nova-code-container] {
+  border-radius: var(--r-m);
+  border-color: var(--hairline);
+  background: var(--well);
+}
+.sl-markdown-content .astro-code,
+.sl-markdown-content .astro-code code {
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  border: 0;
+}
+.sl-markdown-content .astro-code .line.highlighted { background-color: var(--nano-color-highlight); }
+.sl-markdown-content .astro-code .highlighted-word { border-color: var(--hairline); background: var(--glass-2); }
+.sl-markdown-content .astro-code .line.diff.add { background-color: var(--mint-fill); }
+.sl-markdown-content .astro-code .line.diff.remove { background-color: var(--rose-fill); }
+
+/* file name / language tab above a block */
+[data-nova-code-container] .tablist-wrapper,
+[data-nova-code-container] figcaption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-low);
+  border-color: var(--hairline-soft);
+}
+
+nova-code-copy-button button,
+.sl-markdown-content .copy button {
+  border-radius: var(--r-s);
+  border: 1px solid var(--hairline);
+  background: var(--glass-2);
+  color: var(--ink-mid);
+}
+nova-code-copy-button button:hover { color: var(--ink-hi); }
+
+/* -- 11 · asides (Proxima callouts) -------------------------- */
+.starlight-aside {
+  border-radius: var(--r-m);
+  border: 1px solid var(--sl-color-asides-border);
+  border-inline-start-width: 1px;
+  color: var(--ink-mid);
+  padding: 14px 16px;
+}
+.starlight-aside__title { font-family: var(--font-ui); font-size: 13px; font-weight: 560; letter-spacing: 0.02em; }
+.starlight-aside,
+.starlight-aside .starlight-aside__content { color: var(--ink-mid); }
+.starlight-aside .starlight-aside__content a { color: var(--sl-color-asides-text-accent); }
+
+/* -- 12 · cards ---------------------------------------------- */
+.sl-markdown-content :is(.card, .sl-link-card) {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-l);
+  background: var(--glass-1);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.sl-markdown-content .sl-link-card:hover {
+  background: var(--glass-2);
+  border-color: var(--hairline);
+}
+.sl-markdown-content .sl-link-card .title { color: var(--ink-hi); font-weight: 540; font-size: 16px; }
+.sl-markdown-content .sl-link-card .description { color: var(--ink-low); font-size: 13.5px; }
+.sl-markdown-content .sl-link-card:is(:hover, :focus-within) .description { color: var(--ink-mid); }
+.sl-markdown-content .sl-link-card .icon { color: var(--ink-low); }
+.sl-markdown-content .sl-link-card:hover .icon { color: var(--accent); }
+.sl-markdown-content .card .title { color: var(--ink-hi); }
+.sl-markdown-content .card .icon { color: var(--accent); }
+
+/* -- 13 · badges --------------------------------------------- */
+.sl-badge {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: var(--r-full);
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* -- 14 · splash hero ---------------------------------------- */
+/* Starlight's splash hero reserves up to 10rem below the fold; Proxima's
+   landing lets the next band start sooner. */
+.hero { padding-block: clamp(2.5rem, calc(1rem + 7vmin), 6.5rem); }
+.hero h1 {
+  font-size: clamp(34px, 5vw, 46px);
+  font-weight: 480;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  color: var(--ink-hi);
+}
+/* the wordmark carries the whole hero, so the serif gets room to be a display
+   face rather than a flourish inside a sentence */
+.hero h1:has(> .serif:only-child) { font-size: clamp(46px, 7.5vw, 78px); line-height: 1.05; }
+
+.hero .copy .tagline {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-mid);
+  max-width: 52ch;
+}
+/* the hero action becomes Proxima's primary button: a capsule with the
+   only glow in the system (specificity beats nova's utility classes) */
+.hero .actions a.not-content {
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+  box-shadow: 0 0 24px var(--accent-glow);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 13.5px;
+  letter-spacing: 0.015em;
+  padding: 10px 22px;
+  transition: filter 0.15s;
+}
+.hero .actions a.not-content:hover { background: var(--accent); color: var(--accent-ink); filter: brightness(1.08); box-shadow: 0 0 24px var(--accent-glow); }
+
+/* -- 15 · pagination & footer -------------------------------- */
+main footer .flex a[rel] {
+  border-radius: var(--r-l);
+  border: 1px solid var(--hairline);
+  background: var(--glass-1);
+  color: var(--ink-mid);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 16px;
+  transition: background 0.2s, color 0.2s;
+}
+main footer .flex a[rel]:hover { background: var(--glass-2); color: var(--ink-hi); }
+main footer .meta { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-low); }
+
+/* -- 16 · search --------------------------------------------- */
+/* the scoped rule zeroes the border, so this one restates it whole */
+site-search button[data-open-modal] {
+  border-radius: var(--r-full);
+  border: 1px solid var(--hairline);
+  background: var(--glass-2);
+  color: var(--ink-low);
+  font-size: 13.5px;
+}
+site-search button[data-open-modal]:hover { background: var(--glass-1); color: var(--ink-mid); }
+site-search button kbd, site-search kbd kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-low);
+  background: var(--glass-1);
+  border: 1px solid var(--hairline-soft);
+  border-radius: 6px;
+}
+site-search dialog {
+  background: var(--glass-3);
+  -webkit-backdrop-filter: blur(26px);
+  backdrop-filter: blur(26px);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+}
+site-search dialog::backdrop { background: var(--sl-color-backdrop-overlay); }
+site-search #starlight__search {
+  --pagefind-ui-font: var(--font-ui);
+  --pagefind-ui-text: var(--ink-hi);
+  --pagefind-ui-background: transparent;
+  --pagefind-ui-border: var(--hairline);
+  --pagefind-ui-border-radius: var(--r-m);
+  --pagefind-ui-primary: var(--accent);
+  --pagefind-ui-tag: var(--glass-2);
+}
+
+/* -- 17 · tags pages ----------------------------------------- */
+/* the tag plugin is token-driven; these are the shape and type calls */
+.tags-index .stat-value,
+.tags-index .letter {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  color: var(--ink-hi);
+  font-variant-numeric: tabular-nums;
+}
+.tags-index .stat-label,
+.tags-index .section-title,
+.tags-index .letter-count {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--ink-low);
+}
+.tags-index .cloud-tag,
+.sl-markdown-content .cloud-tag {
+  border-radius: var(--r-full);
+  border-color: var(--hairline);
+  background: var(--glass-1);
+  color: var(--ink-mid);
+  font-family: var(--font-ui);
+}
+.tags-index .cloud-tag:hover { background: var(--glass-2); border-color: var(--accent); color: var(--ink-hi); }
+.tags-index .cloud-tag .count {
+  font-family: var(--font-mono);
+  color: var(--ink-low);
+  background: var(--glass-2);
+  border-radius: var(--r-full);
+}
+.tags-index .letter-nav {
+  border-radius: var(--r-l);
+  border-color: var(--hairline);
+  background: var(--glass-1);
+}
+.tags-index .letter-link {
+  border-radius: var(--r-full);
+  border-color: var(--hairline);
+  background: var(--glass-2);
+  color: var(--ink-mid);
+  font-family: var(--font-mono);
+}
+.tags-index .letter-link:hover { transform: none; box-shadow: none; border-color: var(--accent); color: var(--ink-hi); }
+
+/* The plugin colour-codes popularity tiers with five raw hexes — grey, blue,
+   violet, pink, amber. Size already carries popularity, so colour is doing a
+   second job here in hues the system does not own. Everything collapses to
+   the one accent. */
+.sl-markdown-content .cloud-tag,
+.sl-markdown-content .tag-badge,
+.sl-markdown-content [class*='tier-'] { --tag-accent: var(--accent); }
+
+/* a count or an index is a fact, so it wears the neutral mono chip */
+:root .sl-markdown-content :is(.tag-badge, .page-card-index, .cloud-tag .count, .fb-tag__count) {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ink-mid);
+  background: var(--glass-2);
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--r-full);
+  box-shadow: none;
+}
+
+/* The plugin paints its own dark mode in untinted greys — rgba(30,30,40) and
+   friends — and drops a shadow on every card. The :root prefix lifts these
+   past its :global([data-theme='dark']) rules, which are otherwise a tie. */
+:root .sl-markdown-content :is(.tagged-pages, .related-tags, .tag-header, .tag-pagination, .letter-nav) {
+  background: var(--glass-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-l);
+  box-shadow: none;
+}
+:root .sl-markdown-content :is(.page-card, .cloud-tag, .letter-link, .pagination-btn, .pagination-page, .card) {
+  background: var(--glass-2);
+  border-color: var(--hairline);
+  box-shadow: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+/* hover shifts brightness, never geometry */
+:root .sl-markdown-content :is(.page-card, .cloud-tag, .letter-link, .pagination-btn, .card):hover {
+  background: var(--glass-1);
+  border-color: var(--accent);
+  transform: none;
+  box-shadow: none;
+}
+:root .sl-markdown-content .page-card-title { color: var(--ink-hi); font-weight: 540; }
+:root .sl-markdown-content :is(.page-card-slug, .slug-label) { font-family: var(--font-mono); font-size: 11px; color: var(--ink-low); }
+:root .sl-markdown-content .fb-tag--solid { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+
+/* -- 18 · odds and ends -------------------------------------- */
+/* scroll-to-top and fullscreen-code controls: capsules on glass */
+.scroll-to-top-button,
+button[class*='scroll-to-top'],
+.starlight-codeblock-fullscreen-button {
+  border-radius: var(--r-full);
+  border: 1px solid var(--hairline);
+  background: var(--glass-3);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  color: var(--ink-hi);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.starlight-image-zoom-dialog { background: var(--void); }
+.starlight-image-zoom-control {
+  border-radius: var(--r-full);
+  border: 1px solid var(--hairline);
+  background: var(--glass-3);
+  color: var(--ink-hi);
+}
+
+/* motion sits behind the preference, everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

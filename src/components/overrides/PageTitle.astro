@@ -1,0 +1,25 @@
+---
+/* Proxima puts a mono, bracketed eyebrow above every page title:
+   ( NOTES · 000 ). Here it is derived from the route — the first path
+   segment is the section, and the numeric prefix on a document filename
+   is its number. Index pages read ( THINGS · NOTES ) instead. */
+
+// Starlight's PAGE_TITLE_ID. Not exported from the package root, so it is
+// inlined here; the TOC and the skip link both anchor to it.
+const PAGE_TITLE_ID = '_top'
+
+const { title } = Astro.locals.starlightRoute.entry.data
+
+const segments = Astro.url.pathname.split('/').filter(Boolean)
+const section = segments[0]
+const leaf = segments.length > 1 ? segments[segments.length - 1] : undefined
+const number = leaf?.match(/^(\d+)-/)?.[1]
+
+const label = section ? section : 'things'
+const detail = number ?? (leaf ? leaf.replace(/-/g, ' ') : section ? 'index' : 'home')
+---
+
+<div class="eyebrow page-eyebrow">
+  ( <b>{label.toUpperCase()}</b> · {detail.toUpperCase()} )
+</div>
+<h1 id={PAGE_TITLE_ID}>{title}</h1>
